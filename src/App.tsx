@@ -25,17 +25,18 @@ function App() {
         
         (window as any).AFRAME.registerComponent('play-on-scan', {
           /**
-           * Hàm init() được gọi MỘT LẦN cho mỗi <a-entity> có gắn 'play-on-scan'.
+           * Hàm init() được gọi MỘT LẦN cho mỗi <a-nft> có gắn 'play-on-scan'.
            */
           init: function () {
-            // this.el chính là thẻ <a-entity> (marker)
+            // this.el chính là thẻ <a-nft> (marker)
             const videoEl = this.el.querySelector('a-video');
             const scanPromptEl = document.getElementById('scan-prompt');
 
             // Khi tìm thấy marker
             this.el.addEventListener('markerFound', () => {
+              console.log('Marker found!');
               if (videoEl) {
-                const video: HTMLVideoElement = videoEl.object3D.el.srcElement;
+                const video: HTMLVideoElement = videoEl.getAttribute('material').src;
                 if (video) video.play();
               }
               
@@ -46,8 +47,9 @@ function App() {
 
             // Khi mất dấu marker
             this.el.addEventListener('markerLost', () => {
+              console.log('Marker lost!');
               if (videoEl) {
-                const video: HTMLVideoElement = videoEl.object3D.el.srcElement;
+                const video: HTMLVideoElement = videoEl.getAttribute('material').src;
                 if (video) video.pause();
               }
               
@@ -66,16 +68,31 @@ function App() {
     const setupLoadingScreen = () => {
       const scene = document.querySelector('a-scene');
       if (scene) {
-        // 'hasLoaded' là một cờ của A-Frame
-        if (scene.hasLoaded) {
+        // Hàm để ẩn loading và hiện scan prompt
+        const hideLoading = () => {
+          console.log('AR đã tải xong, ẩn màn hình loading');
           setIsLoading(false);
           setShowScanPrompt(true);
+        };
+
+        // Lắng nghe sự kiện arjs-video-loaded từ AR.js
+        scene.addEventListener('arjs-video-loaded', () => {
+          console.log('AR.js video loaded');
+          hideLoading();
+        }, { once: true });
+
+        // Kiểm tra nếu scene đã load xong
+        if ((scene as any).hasLoaded) {
+          hideLoading();
         } else {
-          // 'arjs-nft-loaded' kích hoạt khi TẤT CẢ các tệp marker NFT đã tải xong
-          scene.addEventListener('arjs-nft-loaded', () => {
-            setIsLoading(false);
-            setShowScanPrompt(true);
-          }, { once: true }); // Chỉ chạy 1 lần
+          // Lắng nghe nhiều sự kiện để đảm bảo bắt được
+          scene.addEventListener('loaded', hideLoading, { once: true });
+          
+          // Timeout backup: nếu sau 8 giây vẫn chưa load, ẩn loading screen
+          setTimeout(() => {
+            console.log('Timeout - ẩn loading screen sau 8 giây');
+            hideLoading();
+          }, 8000);
         }
       } else {
         // Nếu A-Frame chưa kịp khởi tạo, thử lại sau 100ms
@@ -146,41 +163,47 @@ function App() {
 
         {/* === MARKER 1 === */}
         {/* Marker từ thư mục public/asset1 */}
-        <a-entity
+        <a-nft
           id="marker1"
           type="nft"
           url="/asset1/video1"
           smooth="true"
           smoothCount="10"
-          play-on-scan  // <-- Gắn component tùy chỉnh của chúng ta
+          smoothTolerance=".01"
+          smoothThreshold="5"
+          play-on-scan
         >
           {/* Nội dung bên trong: liên kết tới video #video1 */}
           <a-video
             src="#video1"
-            width="1.6" height="0.9" // Tỷ lệ 16:9
+            width="1.6" 
+            height="0.9"
             rotation="-90 0 0"
-            position="0 0 -0.1"
+            position="0 0 0"
           ></a-video>
-        </a-entity>
+        </a-nft>
 
         {/* === MARKER 2 === */}
         {/* Marker từ thư mục public/asset2 */}
-        <a-entity
+        <a-nft
           id="marker2"
           type="nft"
           url="/asset2/video2"
           smooth="true"
           smoothCount="10"
-          play-on-scan // <-- Gắn component tùy chỉnh của chúng ta
+          smoothTolerance=".01"
+          smoothThreshold="5"
+          play-on-scan
         >
           {/* Nội dung bên trong: liên kết tới video #video2 */}
           <a-video
             src="#video2"
-            width="1.28" height="0.72" // Tỷ lệ khác
+            width="1.28" 
+            height="0.72"
             rotation="-90 0 0"
-            position="0 0 -0.1"
+            position="0 0 0"
           ></a-video>
-        </a-entity>
+        </a-nft>
         
         {/* === THÊM CÁC MARKER KHÁC CỦA BẠN VÀO ĐÂY === */}
         {/*

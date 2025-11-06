@@ -1,12 +1,13 @@
+/// <reference types="vite/client" />
+
 declare global {
   namespace JSX {
     interface IntrinsicElements {
       'a-scene': any;
       'a-assets': any;
-      'a-video': any;
       'a-entity': any;
+      'a-video': any;
       'a-camera': any;
-      'a-nft': any;
     }
   }
 
