@@ -10,6 +10,24 @@ function App() {
   // Vẫn dùng state của React để render màn hình chờ
   const [showScanPrompt, setShowScanPrompt] = useState(false);
 
+  // Test function để chơi video
+  const testVideo = (videoId: string) => {
+    const video = document.querySelector(videoId) as HTMLVideoElement;
+    if (video) {
+      video.play()
+        .then(() => {
+          console.log('✅ Test video playing:', videoId);
+          alert(`Video ${videoId} đang chạy! Kiểm tra xem có nghe được âm thanh không?`);
+        })
+        .catch(err => {
+          console.error('❌ Error:', err);
+          alert(`Lỗi: ${err.message}`);
+        });
+    } else {
+      alert(`Không tìm thấy video ${videoId}`);
+    }
+  };
+
   // useEffect này chỉ chạy 1 lần khi component được mount
   useEffect(() => {
     // Chúng ta sẽ "đăng ký" một component A-Frame tùy chỉnh.
@@ -32,30 +50,40 @@ function App() {
             const marker = this.el;
             const scanPromptEl = document.getElementById('scan-prompt');
             
-            console.log('Marker initialized:', marker.id);
+            console.log('🎯 Marker initialized:', marker.id);
 
             // Khi tìm thấy marker
             marker.addEventListener('markerFound', () => {
               console.log('✅ Marker found!', marker.id);
               
               // Tìm video element bên trong marker
-              const videoEl = marker.querySelector('a-video');
+              const videoEl = marker.querySelector('[material]');
+              console.log('📹 Video element found:', videoEl);
+              
               if (videoEl) {
-                // Lấy video HTML element từ src attribute
+                // Lấy src từ thuộc tính material
+                const material = videoEl.getAttribute('material');
+                console.log('🎬 Material:', material);
+                
+                // Lấy src từ a-video
                 const videoSrc = videoEl.getAttribute('src');
-                const videoElement = document.querySelector(videoSrc);
+                console.log('🎬 Video src:', videoSrc);
                 
-                console.log('Video element:', videoElement);
-                
-                if (videoElement && videoElement.tagName === 'VIDEO') {
-                  videoElement.play()
-                    .then(() => console.log('✅ Video playing'))
-                    .catch(err => console.error('❌ Error playing video:', err));
+                if (videoSrc) {
+                  // videoSrc là #video1 hoặc #video2
+                  const videoElement = document.querySelector(videoSrc);
+                  console.log('🎬 Video HTML element:', videoElement);
+                  
+                  if (videoElement && videoElement.tagName === 'VIDEO') {
+                    videoElement.play()
+                      .then(() => console.log('✅ Video playing:', videoSrc))
+                      .catch((err: any) => console.error('❌ Error playing video:', err));
+                  }
                 }
               }
               
               activeMarkerCount++;
-              console.log('Active marker count:', activeMarkerCount);
+              console.log('📊 Active marker count:', activeMarkerCount);
               
               // Ẩn prompt quét khi BẤT KỲ marker nào được tìm thấy
               if (scanPromptEl) scanPromptEl.style.display = 'none';
@@ -65,19 +93,22 @@ function App() {
             marker.addEventListener('markerLost', () => {
               console.log('❌ Marker lost!', marker.id);
               
-              const videoEl = marker.querySelector('a-video');
+              const videoEl = marker.querySelector('[material]');
               if (videoEl) {
                 const videoSrc = videoEl.getAttribute('src');
-                const videoElement = document.querySelector(videoSrc);
                 
-                if (videoElement && videoElement.tagName === 'VIDEO') {
-                  videoElement.pause();
-                  console.log('⏸️ Video paused');
+                if (videoSrc) {
+                  const videoElement = document.querySelector(videoSrc);
+                  
+                  if (videoElement && videoElement.tagName === 'VIDEO') {
+                    videoElement.pause();
+                    console.log('⏸️ Video paused:', videoSrc);
+                  }
                 }
               }
               
               activeMarkerCount--;
-              console.log('Active marker count:', activeMarkerCount);
+              console.log('📊 Active marker count:', activeMarkerCount);
               
               // Chỉ hiện lại prompt khi KHÔNG CÒN marker nào được thấy
               if (activeMarkerCount === 0 && scanPromptEl) {
@@ -180,6 +211,68 @@ function App() {
             <small style={{ fontSize: '12px', marginTop: '10px', display: 'block' }}>
               💡 Mẹo: Giữ camera ổn định, đảm bảo đủ ánh sáng và hình ảnh rõ nét
             </small>
+            <div style={{ marginTop: '20px' }}>
+              <button 
+                onClick={() => testVideo('#video1')}
+                style={{ 
+                  padding: '10px 20px', 
+                  margin: '5px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Test Video 1
+              </button>
+              <button 
+                onClick={() => testVideo('#video2')}
+                style={{ 
+                  padding: '10px 20px', 
+                  margin: '5px',
+                  backgroundColor: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Test Video 2
+              </button>
+              <button 
+                onClick={() => testVideo('#video3')}
+                style={{ 
+                  padding: '10px 20px', 
+                  margin: '5px',
+                  backgroundColor: '#FF9800',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Test Video 3
+              </button>
+              <button 
+                onClick={() => testVideo('#video4')}
+                style={{ 
+                  padding: '10px 20px', 
+                  margin: '5px',
+                  backgroundColor: '#E91E63',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Test Video 4
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -215,10 +308,27 @@ function App() {
             crossOrigin="anonymous"
           ></video>
 
-          {/* === THÊM CÁC VIDEO KHÁC CỦA BẠN VÀO ĐÂY === */}
-          {/*
-          <video id="video-3" src="/video-3.mp4" ... ></video>
-          */}
+          {/* === TÀI SẢN 3 === */}
+          {/* Video từ thư mục public/asset3 */}
+          <video 
+            id="video3"
+            src="/asset3/video3.mp4"
+            preload="auto" 
+            loop={true} 
+            playsInline 
+            crossOrigin="anonymous"
+          ></video>
+
+          {/* === TÀI SẢN 4 === */}
+          {/* Video từ thư mục public/asset4 */}
+          <video 
+            id="video4"
+            src="/asset4/video4.mp4"
+            preload="auto" 
+            loop={true} 
+            playsInline 
+            crossOrigin="anonymous"
+          ></video>
 
         </a-assets>
 
@@ -261,6 +371,50 @@ function App() {
             src="#video2"
             width="1.28" 
             height="0.72"
+            rotation="-90 0 0"
+            position="0 0 0"
+          ></a-video>
+        </a-nft>
+
+        {/* === MARKER 3 === */}
+        {/* Marker từ thư mục public/asset3 */}
+        <a-nft
+          id="marker3"
+          type="nft"
+          url="/asset3/video3"
+          smooth="true"
+          smoothCount="10"
+          smoothTolerance=".01"
+          smoothThreshold="5"
+          play-on-scan
+        >
+          {/* Nội dung bên trong: liên kết tới video #video3 */}
+          <a-video
+            src="#video3"
+            width="1.6" 
+            height="0.9"
+            rotation="-90 0 0"
+            position="0 0 0"
+          ></a-video>
+        </a-nft>
+
+        {/* === MARKER 4 === */}
+        {/* Marker từ thư mục public/asset4 */}
+        <a-nft
+          id="marker4"
+          type="nft"
+          url="/asset4/video4"
+          smooth="true"
+          smoothCount="10"
+          smoothTolerance=".01"
+          smoothThreshold="5"
+          play-on-scan
+        >
+          {/* Nội dung bên trong: liên kết tới video #video4 */}
+          <a-video
+            src="#video4"
+            width="1.6" 
+            height="0.9"
             rotation="-90 0 0"
             position="0 0 0"
           ></a-video>
