@@ -29,31 +29,56 @@ function App() {
            */
           init: function () {
             // this.el chính là thẻ <a-nft> (marker)
-            const videoEl = this.el.querySelector('a-video');
+            const marker = this.el;
             const scanPromptEl = document.getElementById('scan-prompt');
+            
+            console.log('Marker initialized:', marker.id);
 
             // Khi tìm thấy marker
-            this.el.addEventListener('markerFound', () => {
-              console.log('Marker found!');
+            marker.addEventListener('markerFound', () => {
+              console.log('✅ Marker found!', marker.id);
+              
+              // Tìm video element bên trong marker
+              const videoEl = marker.querySelector('a-video');
               if (videoEl) {
-                const video: HTMLVideoElement = videoEl.getAttribute('material').src;
-                if (video) video.play();
+                // Lấy video HTML element từ src attribute
+                const videoSrc = videoEl.getAttribute('src');
+                const videoElement = document.querySelector(videoSrc);
+                
+                console.log('Video element:', videoElement);
+                
+                if (videoElement && videoElement.tagName === 'VIDEO') {
+                  videoElement.play()
+                    .then(() => console.log('✅ Video playing'))
+                    .catch(err => console.error('❌ Error playing video:', err));
+                }
               }
               
               activeMarkerCount++;
+              console.log('Active marker count:', activeMarkerCount);
+              
               // Ẩn prompt quét khi BẤT KỲ marker nào được tìm thấy
               if (scanPromptEl) scanPromptEl.style.display = 'none';
             });
 
             // Khi mất dấu marker
-            this.el.addEventListener('markerLost', () => {
-              console.log('Marker lost!');
+            marker.addEventListener('markerLost', () => {
+              console.log('❌ Marker lost!', marker.id);
+              
+              const videoEl = marker.querySelector('a-video');
               if (videoEl) {
-                const video: HTMLVideoElement = videoEl.getAttribute('material').src;
-                if (video) video.pause();
+                const videoSrc = videoEl.getAttribute('src');
+                const videoElement = document.querySelector(videoSrc);
+                
+                if (videoElement && videoElement.tagName === 'VIDEO') {
+                  videoElement.pause();
+                  console.log('⏸️ Video paused');
+                }
               }
               
               activeMarkerCount--;
+              console.log('Active marker count:', activeMarkerCount);
+              
               // Chỉ hiện lại prompt khi KHÔNG CÒN marker nào được thấy
               if (activeMarkerCount === 0 && scanPromptEl) {
                 scanPromptEl.style.display = 'flex';
@@ -68,39 +93,71 @@ function App() {
     const setupLoadingScreen = () => {
       const scene = document.querySelector('a-scene');
       if (scene) {
+        console.log('🎬 A-Frame scene found, setting up loading screen');
+        
         // Hàm để ẩn loading và hiện scan prompt
         const hideLoading = () => {
-          console.log('AR đã tải xong, ẩn màn hình loading');
+          console.log('✅ AR đã tải xong, ẩn màn hình loading');
           setIsLoading(false);
           setShowScanPrompt(true);
         };
 
+        // Đợi camera được khởi tạo
+        let cameraReady = false;
+        const checkCamera = setInterval(() => {
+          const video = document.querySelector('video');
+          if (video && video.readyState >= 2) {
+            console.log('📹 Camera ready');
+            cameraReady = true;
+            clearInterval(checkCamera);
+          }
+        }, 500);
+
         // Lắng nghe sự kiện arjs-video-loaded từ AR.js
         scene.addEventListener('arjs-video-loaded', () => {
-          console.log('AR.js video loaded');
+          console.log('📱 AR.js video loaded');
           hideLoading();
         }, { once: true });
 
         // Kiểm tra nếu scene đã load xong
         if ((scene as any).hasLoaded) {
+          console.log('🎬 Scene already loaded');
           hideLoading();
         } else {
           // Lắng nghe nhiều sự kiện để đảm bảo bắt được
-          scene.addEventListener('loaded', hideLoading, { once: true });
-          
-          // Timeout backup: nếu sau 8 giây vẫn chưa load, ẩn loading screen
-          setTimeout(() => {
-            console.log('Timeout - ẩn loading screen sau 8 giây');
+          scene.addEventListener('loaded', () => {
+            console.log('🎬 Scene loaded event');
             hideLoading();
-          }, 8000);
+          }, { once: true });
+          
+          // Timeout backup: nếu sau 5 giây vẫn chưa load, ẩn loading screen
+          setTimeout(() => {
+            console.log('⏱️ Timeout - ẩn loading screen sau 5 giây');
+            hideLoading();
+          }, 5000);
         }
       } else {
+        console.log('⏳ Waiting for A-Frame scene...');
         // Nếu A-Frame chưa kịp khởi tạo, thử lại sau 100ms
         setTimeout(setupLoadingScreen, 100);
       }
     };
 
     setupLoadingScreen();
+
+    // Debug: Log tất cả markers được tìm thấy
+    setTimeout(() => {
+      const markers = document.querySelectorAll('a-nft');
+      console.log(`📍 Found ${markers.length} NFT markers:`, markers);
+      
+      markers.forEach((marker, index) => {
+        console.log(`  Marker ${index + 1}:`, {
+          id: marker.id,
+          url: marker.getAttribute('url'),
+          loaded: marker.hasAttribute('arjs-anchor')
+        });
+      });
+    }, 2000);
 
     // Không cần hàm cleanup vì component A-Frame tự quản lý vòng đời của nó
   }, []); // Mảng rỗng đảm bảo useEffect chỉ chạy 1 lần
@@ -119,6 +176,10 @@ function App() {
         <div id="scan-prompt" className="overlay">
           <div>
             Hãy hướng camera vào một trong các ảnh đã đăng ký
+            <br />
+            <small style={{ fontSize: '12px', marginTop: '10px', display: 'block' }}>
+              💡 Mẹo: Giữ camera ổn định, đảm bảo đủ ánh sáng và hình ảnh rõ nét
+            </small>
           </div>
         </div>
       )}
