@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 
 // Biến toàn cục để theo dõi số lượng marker đang được nhìn thấy
