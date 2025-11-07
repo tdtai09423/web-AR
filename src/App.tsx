@@ -10,24 +10,6 @@ function App() {
   // Vẫn dùng state của React để render màn hình chờ
   const [showScanPrompt, setShowScanPrompt] = useState(false);
 
-  // Test function để chơi video
-  const testVideo = (videoId: string) => {
-    const video = document.querySelector(videoId) as HTMLVideoElement;
-    if (video) {
-      video.play()
-        .then(() => {
-          console.log('✅ Test video playing:', videoId);
-          alert(`Video ${videoId} đang chạy! Kiểm tra xem có nghe được âm thanh không?`);
-        })
-        .catch(err => {
-          console.error('❌ Error:', err);
-          alert(`Lỗi: ${err.message}`);
-        });
-    } else {
-      alert(`Không tìm thấy video ${videoId}`);
-    }
-  };
-
   // useEffect này chỉ chạy 1 lần khi component được mount
   useEffect(() => {
     // Chúng ta sẽ "đăng ký" một component A-Frame tùy chỉnh.
@@ -133,17 +115,6 @@ function App() {
           setShowScanPrompt(true);
         };
 
-        // Đợi camera được khởi tạo
-        let cameraReady = false;
-        const checkCamera = setInterval(() => {
-          const video = document.querySelector('video');
-          if (video && video.readyState >= 2) {
-            console.log('📹 Camera ready');
-            cameraReady = true;
-            clearInterval(checkCamera);
-          }
-        }, 500);
-
         // Lắng nghe sự kiện arjs-video-loaded từ AR.js
         scene.addEventListener('arjs-video-loaded', () => {
           console.log('📱 AR.js video loaded');
@@ -211,68 +182,6 @@ function App() {
             <small style={{ fontSize: '12px', marginTop: '10px', display: 'block' }}>
               💡 Mẹo: Giữ camera ổn định, đảm bảo đủ ánh sáng và hình ảnh rõ nét
             </small>
-            <div style={{ marginTop: '20px' }}>
-              <button 
-                onClick={() => testVideo('#video1')}
-                style={{ 
-                  padding: '10px 20px', 
-                  margin: '5px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontSize: '12px'
-                }}
-              >
-                Test Video 1
-              </button>
-              <button 
-                onClick={() => testVideo('#video2')}
-                style={{ 
-                  padding: '10px 20px', 
-                  margin: '5px',
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontSize: '12px'
-                }}
-              >
-                Test Video 2
-              </button>
-              <button 
-                onClick={() => testVideo('#video3')}
-                style={{ 
-                  padding: '10px 20px', 
-                  margin: '5px',
-                  backgroundColor: '#FF9800',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontSize: '12px'
-                }}
-              >
-                Test Video 3
-              </button>
-              <button 
-                onClick={() => testVideo('#video4')}
-                style={{ 
-                  padding: '10px 20px', 
-                  margin: '5px',
-                  backgroundColor: '#E91E63',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontSize: '12px'
-                }}
-              >
-                Test Video 4
-              </button>
-            </div>
           </div>
         </div>
       )}
